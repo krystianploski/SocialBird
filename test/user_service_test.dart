@@ -16,4 +16,25 @@ void main() {
     expect(registrationService.register(user), isTrue);
     expect(loginService.login(user.email, user.password), same(user));
   });
+
+  test('email matching is case-insensitive', () {
+    final service = UserService();
+    const user = UserModel(
+      username: 'CaseSensitive',
+      email: 'case-insensitive-test@example.com',
+      password: 'test-password',
+    );
+    const duplicate = UserModel(
+      username: 'Duplicate',
+      email: 'CASE-INSENSITIVE-TEST@EXAMPLE.COM',
+      password: 'another-password',
+    );
+
+    expect(service.register(user), isTrue);
+    expect(
+      service.login('CASE-INSENSITIVE-TEST@EXAMPLE.COM', user.password),
+      same(user),
+    );
+    expect(service.register(duplicate), isFalse);
+  });
 }

@@ -5,23 +5,14 @@ import '../services/user_service.dart';
 class LoginViewModel extends ChangeNotifier {
   final userService = UserService();
 
-  String _username = '';
   String _email = '';
   String _password = '';
 
-  String get username => _username;
   String get email => _email;
   String get password => _password;
 
-  // usefull for showing loading indicator when login is in progress
-  bool isLoading = false;
-
-  String? errorMessage;
-
-  void setUsername(String username) {
-    _username = username;
-    notifyListeners();
-  }
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
   void setEmail(String email) {
     _email = email;
@@ -33,9 +24,18 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool login() {
-    final user = userService.login(email, password);
+  Future<bool> login() async {
+    _isLoading = true;
+    notifyListeners();
 
-    return user != null;
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+
+      final user = userService.login(email, password);
+      return user != null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

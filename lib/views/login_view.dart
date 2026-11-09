@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:social_bird/router/app_router.dart";
 import "package:social_bird/view_models/login_view_model.dart";
+import "package:provider/provider.dart";
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -13,19 +14,26 @@ class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final vm = LoginViewModel();
   static final _emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
 
-  void _login() {
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    final vm = context.read<LoginViewModel>();
     vm
       ..setEmail(_emailController.text.trim())
       ..setPassword(_passwordController.text);
 
-    if (!vm.login()) {
+    final success = await vm.login();
+
+    // Check if the widget is still mounted (true == still in the widget tree) before showing a SnackBar or navigating
+    if (!mounted) {
+      return;
+    }
+
+    if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nieprawidłowy e-mail lub hasło')),
       );
@@ -70,10 +78,7 @@ class _LoginViewState extends State<LoginView> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    alignLabelWithHint: true,
-                  ),
+                  decoration: const InputDecoration(labelText: 'Password'),
                   validator: (value) {
                     if ((value ?? '').length < 6) {
                       return 'Hasło musi mieć co najmniej 6 znaków';
@@ -81,7 +86,21 @@ class _LoginViewState extends State<LoginView> {
                     return null;
                   },
                 ),
-                ElevatedButton(onPressed: _login, child: const Text('Zaloguj')),
+                Consumer<LoginViewModel>(
+                  builder: (context, viewModel, child) {
+                    return ElevatedButton(
+                      onPressed: viewModel.isLoading ? null : _login,
+                      child: viewModel.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : child!,
+                    );
+                  },
+                  child: const Text('Zaloguj'),
+                ),
                 const Text('Nie masz konta?'),
                 OutlinedButton(
                   onPressed: () {

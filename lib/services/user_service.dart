@@ -13,17 +13,22 @@ class UserService {
   final List<UserModel> _users = [];
 
   UserModel? login(String email, String password) {
-    try {
-      return _users.firstWhere(
-        (user) => user.email == email && user.password == password,
-      );
-    } catch (_) {
-      return null;
+    final normalizedEmail = email.trim().toLowerCase();
+    for (final user in _users) {
+      if (user.email.trim().toLowerCase() == normalizedEmail &&
+          user.password == password) {
+        return user;
+      }
     }
+    return null;
   }
 
   bool register(UserModel user) {
-    final exists = _users.any((u) => u.email == user.email);
+    final normalizedEmail = user.email.trim().toLowerCase();
+    final exists = _users.any(
+      (existingUser) =>
+          existingUser.email.trim().toLowerCase() == normalizedEmail,
+    );
 
     if (exists) {
       return false;
