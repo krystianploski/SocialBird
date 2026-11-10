@@ -37,4 +37,43 @@ void main() {
     );
     expect(service.register(duplicate), isFalse);
   });
+
+  test('register and login update the current user session', () {
+    final service = UserService();
+    const user = UserModel(
+      username: 'session-user-test',
+      email: 'session-user-test@example.com',
+      password: 'test-password',
+    );
+
+    expect(service.register(user), isTrue);
+    expect(service.currentUser, same(user));
+
+    service.logout();
+    expect(service.currentUser, isNull);
+
+    expect(service.login(user.email, user.password), same(user));
+    expect(service.currentUser, same(user));
+
+    service.logout();
+    expect(service.login(user.email, 'wrong-password'), isNull);
+    expect(service.currentUser, isNull);
+  });
+
+  test('usernames are unique regardless of capitalization', () {
+    final service = UserService();
+    const first = UserModel(
+      username: 'UniqueHandleTest',
+      email: 'unique-handle-first@example.com',
+      password: 'test-password',
+    );
+    const duplicate = UserModel(
+      username: 'uniquehandletest',
+      email: 'unique-handle-second@example.com',
+      password: 'test-password',
+    );
+
+    expect(service.register(first), isTrue);
+    expect(service.register(duplicate), isFalse);
+  });
 }

@@ -4,6 +4,7 @@ import 'package:social_bird/view_models/welcome_view_model.dart';
 import 'package:social_bird/router/app_router.dart';
 
 import 'view_models/login_view_model.dart';
+import 'view_models/post_view_model.dart';
 import 'view_models/register_view_model.dart';
 
 void main() {
@@ -21,6 +22,7 @@ class SocialBirdApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => WelcomeViewModel()),
         ChangeNotifierProvider(create: (_) => RegisterViewModel()),
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
+        ChangeNotifierProvider(create: (_) => PostViewModel()),
       ],
       child: MaterialApp.router(
         routerConfig: appRouter,

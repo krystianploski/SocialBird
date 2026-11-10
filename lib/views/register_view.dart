@@ -43,7 +43,9 @@ class _RegisterViewState extends State<RegisterView> {
 
     if (!vm.register()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Konto z tym e-mailem już istnieje')),
+        const SnackBar(
+          content: Text('Nazwa użytkownika lub e-mail są już zajęte'),
+        ),
       );
       return;
     }

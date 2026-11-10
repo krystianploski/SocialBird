@@ -1,4 +1,6 @@
 class PostModel {
+  static const maxContentLength = 280;
+
   final String id;
   final String authorName;
   final String authorHandle;

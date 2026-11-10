@@ -24,6 +24,18 @@ Navigation is handled using **GoRouter**.
 
 ---
 
+## Application icon
+
+`SocialBirdIcon.jpg` is the source image for Android, iOS, Web, Windows, and
+macOS launcher icons. To regenerate platform icon assets after changing the
+source image, run:
+
+```bash
+dart run flutter_launcher_icons
+```
+
+---
+
 ## Authentication
 
 ### Registration
@@ -65,6 +77,23 @@ Validation includes:
 
 ---
 
+## Posts
+
+- Create text posts up to 280 characters from the home screen.
+- Posts are trimmed, validated, and displayed newest first.
+- The feed updates immediately through `PostViewModel` and Provider.
+- `PostService` stores posts in memory; they are lost when the app restarts.
+- Posts are attributed to the active account: the registered username is
+  shown as the author name and as a lowercase `@username` handle.
+- Usernames are unique regardless of capitalization, so each handle identifies
+  one account.
+- Since registration currently asks for one username, that value is used for
+  both the author's display name and handle. A separate display name can be
+  added later if users should be able to use names with spaces or change them
+  independently of their unique handle.
+
+---
+
 ## State Management
 
 The project uses:
@@ -77,6 +106,7 @@ Current ViewModels:
 - WelcomeViewModel
 - LoginViewModel
 - RegisterViewModel
+- PostViewModel
 
 Providers are registered globally in `main.dart` using `MultiProvider`.
 
@@ -103,20 +133,22 @@ lib/
 
 Responsible for application data.
 
-Example:
+Examples:
 
 ```text
 UserModel
+PostModel
 ```
 
 #### Services
 
 Responsible for business operations.
 
-Example:
+Examples:
 
 ```text
 UserService
+PostService
 ```
 
 Current responsibilities:
@@ -124,6 +156,7 @@ Current responsibilities:
 - Register user
 - Login user
 - Store users in memory
+- Create and list posts in memory
 
 #### ViewModels
 
@@ -134,7 +167,12 @@ Examples:
 ```text
 LoginViewModel
 RegisterViewModel
+PostViewModel
 ```
+
+`HomeView` validates the post form and delegates creation to `PostViewModel`.
+The view model uses `PostService` and notifies Provider listeners so the feed
+updates without rebuilding the app manually.
 
 #### Views
 
@@ -223,8 +261,7 @@ Planned:
 - Password visibility toggle
 - Loading indicators
 - User profile page
-- Feed functionality
-- Post creation
+- Post likes and comments
 
 ---
 
