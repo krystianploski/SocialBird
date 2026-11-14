@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/native.dart';
 import 'package:provider/provider.dart';
+import 'package:social_bird/db/app_database.dart';
 import 'package:social_bird/models/user_model.dart';
+import 'package:social_bird/services/post_service.dart';
 import 'package:social_bird/services/user_service.dart';
 
 import 'package:social_bird/view_models/login_view_model.dart';
@@ -13,13 +16,23 @@ import 'package:social_bird/views/register_view.dart';
 import 'package:social_bird/views/welcome_view.dart';
 
 Widget _testApp(Widget child) {
-  return MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => LoginViewModel()),
-      ChangeNotifierProvider(create: (_) => RegisterViewModel()),
-      ChangeNotifierProvider(create: (_) => PostViewModel()),
-    ],
-    child: MaterialApp(home: child),
+  return Provider<AppDatabase>(
+    create: (_) => AppDatabase(executor: NativeDatabase.memory()),
+    dispose: (_, database) => database.close(),
+    child: Builder(
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => LoginViewModel()),
+          ChangeNotifierProvider(create: (_) => RegisterViewModel()),
+          ChangeNotifierProvider(
+            create: (_) => PostViewModel(
+              postService: PostService(database: context.read<AppDatabase>()),
+            ),
+          ),
+        ],
+        child: MaterialApp(home: child),
+      ),
+    ),
   );
 }
 
@@ -190,6 +203,9 @@ void main() {
     );
     expect(find.text('Nie ma jeszcze postów. Dodaj pierwszy!'), findsNothing);
     expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('home refuses to publish a post without an active user', (
@@ -203,5 +219,8 @@ void main() {
 
     expect(find.text('Zaloguj się, aby opublikować post'), findsOneWidget);
     expect(find.text('Nie ma jeszcze postów. Dodaj pierwszy!'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 }

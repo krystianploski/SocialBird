@@ -12,19 +12,18 @@ class PostViewModel extends ChangeNotifier {
   final PostService _postService;
   final UserService _userService;
 
-  List<PostModel> get posts => _postService.getPosts();
+  late final Stream<List<PostModel>> posts = _postService.watchPosts();
 
-  void createPost(String content) {
+  Future<void> createPost(String content) async {
     final user = _userService.currentUser;
     if (user == null) {
       throw StateError('A user must be logged in to create a post.');
     }
 
-    _postService.addPost(
+    await _postService.insertPost(
       content: content,
       authorName: user.username,
       authorHandle: '@${user.username.toLowerCase()}',
     );
-    notifyListeners();
   }
 }

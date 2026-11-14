@@ -28,7 +28,7 @@ class Posts extends Table {
 
 @DriftDatabase(tables: [Posts])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase({QueryExecutor? executor}) : super(executor ?? _openConnection());
 
   @override
   int get schemaVersion => 1;
@@ -38,7 +38,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Stream<List<Post>> watchPosts() {
-    return select(posts).watch();
+    return (select(posts)..orderBy([
+          (post) => OrderingTerm.desc(post.createdAt),
+          (post) => OrderingTerm.desc(post.id),
+        ]))
+        .watch();
+  }
+
+  Future<int> deletePost(String id) {
+    return (delete(posts)..where((post) => post.id.equals(id))).go();
   }
 }
 

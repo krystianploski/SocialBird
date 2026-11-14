@@ -21,7 +21,7 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  void _submitPost() {
+  Future<void> _submitPost() async {
     if (_contentController.text.trim().isEmpty) {
       _contentController.clear();
       _formKey.currentState!.validate();
@@ -32,15 +32,33 @@ class _HomeViewState extends State<HomeView> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
+    final postViewModel = context.read<PostViewModel>();
     try {
-      context.read<PostViewModel>().createPost(_contentController.text);
+      await postViewModel.createPost(_contentController.text);
     } on StateError {
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      messenger.showSnackBar(
         const SnackBar(content: Text('Zaloguj się, aby opublikować post')),
+      );
+      return;
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'SocialBird',
+          context: ErrorDescription('while saving a post'),
+        ),
+      );
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Nie udało się zapisać posta')),
       );
       return;
     }
 
+    if (!mounted) return;
     _contentController.clear();
     _formKey.currentState!.reset();
   }
@@ -106,21 +124,37 @@ class _HomeViewState extends State<HomeView> {
                   Expanded(
                     child: Consumer<PostViewModel>(
                       builder: (context, viewModel, child) {
-                        final posts = viewModel.posts;
-                        if (posts.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              'Nie ma jeszcze postów. Dodaj pierwszy!',
-                            ),
-                          );
-                        }
+                        return StreamBuilder<List<PostModel>>(
+                          stream: viewModel.posts,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return const Center(
+                                child: Text('Nie udało się wczytać postów'),
+                              );
+                            }
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
 
-                        return ListView.separated(
-                          itemCount: posts.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) =>
-                              _PostCard(post: posts[index]),
+                            final posts = snapshot.data!;
+                            if (posts.isEmpty) {
+                              return const Center(
+                                child: Text(
+                                  'Nie ma jeszcze postów. Dodaj pierwszy!',
+                                ),
+                              );
+                            }
+
+                            return ListView.separated(
+                              itemCount: posts.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(height: 8),
+                              itemBuilder: (context, index) =>
+                                  _PostCard(post: posts[index]),
+                            );
+                          },
                         );
                       },
                     ),
