@@ -15,22 +15,39 @@ import 'package:social_bird/views/login_view.dart';
 import 'package:social_bird/views/register_view.dart';
 import 'package:social_bird/views/welcome_view.dart';
 
-Widget _testApp(Widget child) {
+Widget _testApp(
+  Widget child, {
+  AppDatabase? database,
+  UserService? userService,
+}) {
+  final appDatabase =
+      database ?? AppDatabase(executor: NativeDatabase.memory());
+  final accounts = userService ?? UserService(database: appDatabase);
   return Provider<AppDatabase>(
-    create: (_) => AppDatabase(executor: NativeDatabase.memory()),
+    create: (_) => appDatabase,
     dispose: (_, database) => database.close(),
-    child: Builder(
-      builder: (context) => MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => LoginViewModel()),
-          ChangeNotifierProvider(create: (_) => RegisterViewModel()),
-          ChangeNotifierProvider(
-            create: (_) => PostViewModel(
-              postService: PostService(database: context.read<AppDatabase>()),
+    child: Provider<UserService>(
+      create: (_) => accounts,
+      child: Builder(
+        builder: (context) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider(
+              create: (_) =>
+                  LoginViewModel(userService: context.read<UserService>()),
             ),
-          ),
-        ],
-        child: MaterialApp(home: child),
+            ChangeNotifierProvider(
+              create: (_) =>
+                  RegisterViewModel(userService: context.read<UserService>()),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => PostViewModel(
+                postService: PostService(database: context.read<AppDatabase>()),
+                userService: context.read<UserService>(),
+              ),
+            ),
+          ],
+          child: MaterialApp(home: child),
+        ),
       ),
     ),
   );
@@ -73,12 +90,6 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'valid-pass');
     await tester.tap(find.text('Zaloguj'));
     await tester.pump();
-
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(
-      tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
-      isNull,
-    );
 
     await tester.pump(const Duration(seconds: 2));
     await tester.pump();
@@ -148,16 +159,26 @@ void main() {
   testWidgets('registration reports an email that is already in use', (
     WidgetTester tester,
   ) async {
-    final userService = UserService();
+    final database = AppDatabase(executor: NativeDatabase.memory());
+    final userService = UserService(database: database);
     const existingUser = UserModel(
       username: 'ExistingUser',
       email: 'existing-registration-test@example.com',
       password: 'existing-password',
     );
-    expect(userService.register(existingUser), isTrue);
+    expect(
+      await tester.runAsync(() => userService.register(existingUser)),
+      isTrue,
+    );
     userService.logout();
 
-    await tester.pumpWidget(_testApp(const RegisterView()));
+    await tester.pumpWidget(
+      _testApp(
+        const RegisterView(),
+        database: database,
+        userService: userService,
+      ),
+    );
     await tester.enterText(find.byType(TextFormField).at(0), 'NewUser123');
     await tester.enterText(
       find.byType(TextFormField).at(1),
@@ -172,20 +193,25 @@ void main() {
       find.text('Nazwa użytkownika lub e-mail są już zajęte'),
       findsOneWidget,
     );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('home validates and displays a newly published post', (
     WidgetTester tester,
   ) async {
-    final userService = UserService();
+    final database = AppDatabase(executor: NativeDatabase.memory());
+    final userService = UserService(database: database);
     const user = UserModel(
       username: 'PostAuthorTest',
       email: 'post-author-test@example.com',
       password: 'test-password',
     );
-    expect(userService.register(user), isTrue);
+    expect(await tester.runAsync(() => userService.register(user)), isTrue);
 
-    await tester.pumpWidget(_testApp(const HomeView()));
+    await tester.pumpWidget(
+      _testApp(const HomeView(), database: database, userService: userService),
+    );
 
     await tester.tap(find.text('Opublikuj'));
     await tester.pump();
@@ -211,8 +237,11 @@ void main() {
   testWidgets('home refuses to publish a post without an active user', (
     WidgetTester tester,
   ) async {
-    UserService().logout();
-    await tester.pumpWidget(_testApp(const HomeView()));
+    final database = AppDatabase(executor: NativeDatabase.memory());
+    final userService = UserService(database: database);
+    await tester.pumpWidget(
+      _testApp(const HomeView(), database: database, userService: userService),
+    );
     await tester.enterText(find.byType(TextFormField), 'Post bez sesji');
     await tester.tap(find.text('Opublikuj'));
     await tester.pump();

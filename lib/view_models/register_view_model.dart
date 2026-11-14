@@ -4,7 +4,9 @@ import '../services/user_service.dart';
 import '../models/user_model.dart';
 
 class RegisterViewModel extends ChangeNotifier {
-  final _userService = UserService();
+  RegisterViewModel({required this.userService});
+
+  final UserService userService;
 
   String _username = '';
   String _email = '';
@@ -36,17 +38,13 @@ class RegisterViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool register() {
-    String username = _username.trim();
-    String email = _email.trim();
-    String password = _password;
-
+  Future<bool> register() {
     final user = UserModel(
-      username: username,
-      email: email,
-      password: password,
+      username: _username.trim(),
+      email: _email.trim(),
+      password: _password,
     );
 
-    return _userService.register(user);
+    return userService.register(user);
   }
 }

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../services/user_service.dart';
 
 class LoginViewModel extends ChangeNotifier {
-  final userService = UserService();
+  LoginViewModel({required this.userService});
+
+  final UserService userService;
 
   String _email = '';
   String _password = '';
@@ -29,9 +31,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
-
-      final user = userService.login(email, password);
+      final user = await userService.login(email, password);
       return user != null;
     } finally {
       _isLoading = false;

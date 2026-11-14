@@ -22,11 +22,29 @@ class _LoginViewState extends State<LoginView> {
     }
 
     final vm = context.read<LoginViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
     vm
       ..setEmail(_emailController.text.trim())
       ..setPassword(_passwordController.text);
 
-    final success = await vm.login();
+    late final bool success;
+    try {
+      success = await vm.login();
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'SocialBird',
+          context: ErrorDescription('while logging in'),
+        ),
+      );
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Nie udało się zalogować')),
+      );
+      return;
+    }
 
     // Check if the widget is still mounted (true == still in the widget tree) before showing a SnackBar or navigating
     if (!mounted) {
@@ -34,7 +52,7 @@ class _LoginViewState extends State<LoginView> {
     }
 
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('Nieprawidłowy e-mail lub hasło')),
       );
       return;

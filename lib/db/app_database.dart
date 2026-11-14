@@ -26,12 +26,38 @@ class Posts extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Posts])
+class Users extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  TextColumn get username => text()();
+
+  TextColumn get normalizedUsername => text().unique()();
+
+  TextColumn get email => text()();
+
+  TextColumn get normalizedEmail => text().unique()();
+
+  TextColumn get passwordHash => text()();
+
+  TextColumn get passwordSalt => text()();
+}
+
+@DriftDatabase(tables: [Posts, Users])
 class AppDatabase extends _$AppDatabase {
   AppDatabase({QueryExecutor? executor}) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(users);
+      }
+    },
+  );
 
   Future<void> insertPost(PostsCompanion post) {
     return into(posts).insert(post);
@@ -47,6 +73,30 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deletePost(String id) {
     return (delete(posts)..where((post) => post.id.equals(id))).go();
+  }
+
+  Future<User?> getUserByEmail(String normalizedEmail) {
+    return (select(users)
+          ..where((user) => user.normalizedEmail.equals(normalizedEmail)))
+        .getSingleOrNull();
+  }
+
+  Future<bool> userExists({
+    required String normalizedEmail,
+    required String normalizedUsername,
+  }) async {
+    final matches =
+        await (select(users)..where(
+              (user) =>
+                  user.normalizedEmail.equals(normalizedEmail) |
+                  user.normalizedUsername.equals(normalizedUsername),
+            ))
+            .get();
+    return matches.isNotEmpty;
+  }
+
+  Future<int> insertUser(UsersCompanion user) {
+    return into(users).insert(user);
   }
 }
 

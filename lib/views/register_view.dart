@@ -19,6 +19,7 @@ class _RegisterViewState extends State<RegisterView> {
   final _confirmPasswordController = TextEditingController();
   static final _usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
   static final _emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -29,28 +30,51 @@ class _RegisterViewState extends State<RegisterView> {
     super.dispose();
   }
 
-  void _register() {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     final vm = context.read<RegisterViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
 
     vm
       ..setEmail(_emailController.text.trim())
       ..setPassword(_passwordController.text)
       ..setUsername(_usernameController.text.trim());
 
-    if (!vm.register()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nazwa użytkownika lub e-mail są już zajęte'),
+    setState(() => _isSubmitting = true);
+    try {
+      final registered = await vm.register();
+      if (!mounted) return;
+      if (!registered) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Nazwa użytkownika lub e-mail są już zajęte'),
+          ),
+        );
+        return;
+      }
+
+      appRouter.go('/home');
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'SocialBird',
+          context: ErrorDescription('while registering an account'),
         ),
       );
-      return;
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Nie udało się utworzyć konta')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
-
-    appRouter.go('/home');
   }
 
   @override
@@ -124,8 +148,14 @@ class _RegisterViewState extends State<RegisterView> {
                   },
                 ),
                 ElevatedButton(
-                  onPressed: _register,
-                  child: const Text('Zarejestruj'),
+                  onPressed: _isSubmitting ? null : _register,
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Zarejestruj'),
                 ),
                 const Text('Masz już konto?'),
                 ElevatedButton(
