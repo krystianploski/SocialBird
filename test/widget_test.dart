@@ -4,7 +4,7 @@ import 'package:drift/native.dart';
 import 'package:provider/provider.dart';
 import 'package:social_bird/db/app_database.dart';
 import 'package:social_bird/models/user_model.dart';
-import 'package:social_bird/services/post_service.dart';
+import 'package:social_bird/repositories/post_repository.dart';
 import 'package:social_bird/services/user_service.dart';
 
 import 'package:social_bird/view_models/login_view_model.dart';
@@ -41,7 +41,9 @@ Widget _testApp(
             ),
             ChangeNotifierProvider(
               create: (_) => PostViewModel(
-                postService: PostService(database: context.read<AppDatabase>()),
+                postRepository: PostRepository(
+                  context.read<AppDatabase>(),
+                ),
                 userService: context.read<UserService>(),
               ),
             ),
@@ -228,6 +230,40 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Nie ma jeszcze postów. Dodaj pierwszy!'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('feed updates when a post is inserted into SQLite', (
+    WidgetTester tester,
+  ) async {
+    final database = AppDatabase(executor: NativeDatabase.memory());
+    final userService = UserService(database: database);
+
+    await tester.pumpWidget(
+      _testApp(const HomeView(), database: database, userService: userService),
+    );
+    await tester.pump();
+
+    expect(find.text('Nie ma jeszcze postów. Dodaj pierwszy!'), findsOneWidget);
+
+    await tester.runAsync(
+      () => database.insertPost(
+        PostsCompanion.insert(
+          id: 'external-feed-update',
+          authorName: 'External Author',
+          authorHandle: '@external',
+          content: 'Post inserted outside the screen',
+          createdAt: DateTime(2026),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Post inserted outside the screen'), findsOneWidget);
+    expect(find.text('External Author'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

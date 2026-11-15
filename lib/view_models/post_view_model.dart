@@ -1,19 +1,19 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/post_model.dart';
-import '../services/post_service.dart';
+import '../repositories/post_repository.dart';
 import '../services/user_service.dart';
 
 class PostViewModel extends ChangeNotifier {
   PostViewModel({
-    required this.postService,
+    required this.postRepository,
     required this.userService,
   });
 
-  final PostService postService;
+  final PostRepository postRepository;
   final UserService userService;
 
-  late final Stream<List<PostModel>> posts = postService.watchPosts();
+  late final Stream<List<PostModel>> posts = postRepository.watchPosts();
 
   Future<void> createPost(String content) async {
     final user = userService.currentUser;
@@ -21,7 +21,7 @@ class PostViewModel extends ChangeNotifier {
       throw StateError('A user must be logged in to create a post.');
     }
 
-    await postService.insertPost(
+    await postRepository.insertPost(
       content: content,
       authorName: user.username,
       authorHandle: '@${user.username.toLowerCase()}',

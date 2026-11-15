@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:social_bird/db/app_database.dart';
-import 'package:social_bird/services/post_service.dart';
+import 'package:social_bird/repositories/post_repository.dart';
 import 'package:social_bird/services/user_service.dart';
 import 'package:social_bird/view_models/welcome_view_model.dart';
 import 'package:social_bird/router/app_router.dart';
@@ -42,8 +42,8 @@ class SocialBirdApp extends StatelessWidget {
                 ),
                 ChangeNotifierProvider(
                   create: (_) => PostViewModel(
-                    postService: PostService(
-                      database: context.read<AppDatabase>(),
+                    postRepository: PostRepository(
+                      context.read<AppDatabase>(),
                     ),
                     userService: context.read<UserService>(),
                   ),

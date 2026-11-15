@@ -1,8 +1,8 @@
 import '../db/app_database.dart';
 import '../models/post_model.dart';
 
-class PostService {
-  PostService({AppDatabase? database}) : _database = database ?? AppDatabase();
+class PostRepository {
+  PostRepository(this._database);
 
   final AppDatabase _database;
   static int _nextId = 0;
