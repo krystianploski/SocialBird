@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/post_model.dart';
 import '../view_models/post_view_model.dart';
+import '../view_models/quote_view_model.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -14,6 +17,17 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   final _formKey = GlobalKey<FormState>();
   final _contentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(context.read<PostViewModel>().syncRemotePosts());
+        unawaited(context.read<QuoteViewModel>().fetchRandomQuote());
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -34,6 +48,7 @@ class _HomeViewState extends State<HomeView> {
 
     final messenger = ScaffoldMessenger.of(context);
     final postViewModel = context.read<PostViewModel>();
+    final quoteViewModel = context.read<QuoteViewModel>();
     try {
       await postViewModel.createPost(_contentController.text);
     } on StateError {
@@ -61,6 +76,7 @@ class _HomeViewState extends State<HomeView> {
     if (!mounted) return;
     _contentController.clear();
     _formKey.currentState!.reset();
+    unawaited(quoteViewModel.fetchRandomQuote());
   }
 
   @override
@@ -76,6 +92,8 @@ class _HomeViewState extends State<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const _Inspiration(),
+                  const SizedBox(height: 12),
                   Form(
                     key: _formKey,
                     child: Column(
@@ -120,6 +138,27 @@ class _HomeViewState extends State<HomeView> {
                     'Najnowsze posty',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  Consumer<PostViewModel>(
+                    builder: (context, viewModel, child) {
+                      if (viewModel.isSyncing) {
+                        return const LinearProgressIndicator();
+                      }
+                      if (viewModel.hasSyncError) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Nie udało się odświeżyć postów z API.'),
+                            TextButton(
+                              onPressed: () =>
+                                  unawaited(viewModel.syncRemotePosts()),
+                              child: const Text('Ponów'),
+                            ),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                   const SizedBox(height: 8),
                   Expanded(
                     child: Consumer<PostViewModel>(
@@ -163,6 +202,90 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Inspiration extends StatelessWidget {
+  const _Inspiration();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Consumer<QuoteViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.isLoading) {
+              return const SizedBox(
+                height: 72,
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+
+            if (viewModel.hasError || viewModel.quote == null) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Nie udało się pobrać inspiracji.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  TextButton(
+                    onPressed: () => unawaited(viewModel.fetchRandomQuote()),
+                    child: const Text('Spróbuj ponownie'),
+                  ),
+                ],
+              );
+            }
+
+            final quote = viewModel.quote!;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '✦ Inspiracja ✦',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '"${quote.content}"',
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontFamily: 'serif',
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '— ${quote.author}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

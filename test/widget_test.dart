@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
+import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:social_bird/db/app_database.dart';
+import 'package:social_bird/models/api_post_model.dart';
+import 'package:social_bird/models/quote_model.dart';
 import 'package:social_bird/models/user_model.dart';
 import 'package:social_bird/repositories/post_repository.dart';
+import 'package:social_bird/repositories/quote_repository.dart';
+import 'package:social_bird/services/post_api_service.dart';
+import 'package:social_bird/services/quote_api_service.dart';
 import 'package:social_bird/services/user_service.dart';
 
 import 'package:social_bird/view_models/login_view_model.dart';
 import 'package:social_bird/view_models/post_view_model.dart';
+import 'package:social_bird/view_models/quote_view_model.dart';
 import 'package:social_bird/view_models/register_view_model.dart';
 import 'package:social_bird/views/home_view.dart';
 import 'package:social_bird/views/login_view.dart';
@@ -19,6 +26,7 @@ Widget _testApp(
   Widget child, {
   AppDatabase? database,
   UserService? userService,
+  QuoteRepository? quoteRepository,
 }) {
   final appDatabase =
       database ?? AppDatabase(executor: NativeDatabase.memory());
@@ -26,29 +34,38 @@ Widget _testApp(
   return Provider<AppDatabase>(
     create: (_) => appDatabase,
     dispose: (_, database) => database.close(),
-    child: Provider<UserService>(
-      create: (_) => accounts,
-      child: Builder(
-        builder: (context) => MultiProvider(
-          providers: [
-            ChangeNotifierProvider(
-              create: (_) =>
-                  LoginViewModel(userService: context.read<UserService>()),
-            ),
-            ChangeNotifierProvider(
-              create: (_) =>
-                  RegisterViewModel(userService: context.read<UserService>()),
-            ),
-            ChangeNotifierProvider(
-              create: (_) => PostViewModel(
-                postRepository: PostRepository(
-                  context.read<AppDatabase>(),
+    child: ChangeNotifierProvider<QuoteViewModel>(
+      create: (_) => QuoteViewModel(
+        quoteRepository: quoteRepository ?? _FakeQuoteRepository(),
+      ),
+      child: Provider<PostApiService>(
+        create: (_) => _FakePostApiService(),
+        child: Provider<UserService>(
+          create: (_) => accounts,
+          child: Builder(
+            builder: (context) => MultiProvider(
+              providers: [
+                ChangeNotifierProvider(
+                  create: (_) =>
+                      LoginViewModel(userService: context.read<UserService>()),
                 ),
-                userService: context.read<UserService>(),
-              ),
+                ChangeNotifierProvider(
+                  create: (_) =>
+                      RegisterViewModel(userService: context.read<UserService>()),
+                ),
+                ChangeNotifierProvider(
+                  create: (_) => PostViewModel(
+                    postRepository: PostRepository(
+                      context.read<AppDatabase>(),
+                      context.read<PostApiService>(),
+                    ),
+                    userService: context.read<UserService>(),
+                  ),
+                ),
+              ],
+              child: MaterialApp(home: child),
             ),
-          ],
-          child: MaterialApp(home: child),
+          ),
         ),
       ),
     ),
@@ -209,11 +226,19 @@ void main() {
       email: 'post-author-test@example.com',
       password: 'test-password',
     );
+    final quoteRepository = _FakeQuoteRepository();
     expect(await tester.runAsync(() => userService.register(user)), isTrue);
 
     await tester.pumpWidget(
-      _testApp(const HomeView(), database: database, userService: userService),
+      _testApp(
+        const HomeView(),
+        database: database,
+        userService: userService,
+        quoteRepository: quoteRepository,
+      ),
     );
+    await tester.pump();
+    expect(find.text('"Inspiracja 1"'), findsOneWidget);
 
     await tester.tap(find.text('Opublikuj'));
     await tester.pump();
@@ -222,14 +247,40 @@ void main() {
     await tester.enterText(find.byType(TextFormField), '  Mój pierwszy post  ');
     await tester.tap(find.text('Opublikuj'));
     await tester.pump();
+    await tester.pump();
 
     expect(find.text('Mój pierwszy post'), findsOneWidget);
+    expect(find.text('"Inspiracja 2"'), findsOneWidget);
     expect(find.text(user.username), findsOneWidget);
     expect(
       find.textContaining('@${user.username.toLowerCase()}'),
       findsOneWidget,
     );
     expect(find.text('Nie ma jeszcze postów. Dodaj pierwszy!'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('home retries inspiration after an API error', (
+    WidgetTester tester,
+  ) async {
+    final repository = _RetryQuoteRepository();
+    await tester.pumpWidget(
+      _testApp(const HomeView(), quoteRepository: repository),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Nie udało się pobrać inspiracji.'), findsOneWidget);
+    expect(find.text('Spróbuj ponownie'), findsOneWidget);
+
+    await tester.tap(find.text('Spróbuj ponownie'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('"Inspiracja po błędzie"'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -288,4 +339,47 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });
+}
+
+class _FakeQuoteRepository extends QuoteRepository {
+  _FakeQuoteRepository() : super(QuoteApiService(dio: Dio()));
+
+  var requestCount = 0;
+
+  @override
+  Future<QuoteModel> fetchRandomQuote() async {
+    requestCount++;
+    return QuoteModel(
+      id: requestCount,
+      content: 'Inspiracja $requestCount',
+      author: 'Example Author',
+    );
+  }
+}
+
+class _FakePostApiService extends PostApiService {
+  _FakePostApiService() : super(dio: Dio());
+
+  @override
+  Future<List<ApiPostModel>> fetchPosts() async => const [];
+}
+
+class _RetryQuoteRepository extends QuoteRepository {
+  _RetryQuoteRepository() : super(QuoteApiService(dio: Dio()));
+
+  var requestCount = 0;
+
+  @override
+  Future<QuoteModel> fetchRandomQuote() async {
+    requestCount++;
+    if (requestCount == 1) {
+      throw const QuoteRepositoryException('Service unavailable.');
+    }
+
+    return const QuoteModel(
+      id: 2,
+      content: 'Inspiracja po błędzie',
+      author: 'Example Author',
+    );
+  }
 }

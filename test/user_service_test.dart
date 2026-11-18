@@ -58,6 +58,12 @@ void main() {
       (await database.watchPosts().first).map((post) => post.content),
       ['Shared post'],
     );
+    expect(await loginService.login(user.email, 'wrong-password'), isNull);
+    expect(
+      (await loginService.login(user.email.toUpperCase(), user.password))
+          ?.username,
+      user.username,
+    );
   });
 
   test('email matching is case-insensitive', () async {

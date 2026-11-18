@@ -82,7 +82,11 @@ Validation includes:
 - Create text posts up to 280 characters from the home screen.
 - Posts are trimmed, validated, and displayed newest first.
 - The feed updates immediately through `PostViewModel` and Provider.
-- `PostService` stores posts in memory; they are lost when the app restarts.
+- Locally created posts are stored in SQLite through Drift.
+- The home screen displays an inspirational quote fetched using Dio from
+  `https://dummyjson.com/quotes/random`.
+- Quotes use `QuoteModel.fromJson`, MVVM, and a repository; network and invalid
+  response errors are shown with an option to retry.
 - Posts are attributed to the active account: the registered username is
   shown as the author name and as a lowercase `@username` handle.
 - Usernames are unique regardless of capitalization, so each handle identifies
@@ -107,6 +111,7 @@ Current ViewModels:
 - LoginViewModel
 - RegisterViewModel
 - PostViewModel
+- QuoteViewModel
 
 Providers are registered globally in `main.dart` using `MultiProvider`.
 
@@ -118,7 +123,9 @@ Current project structure:
 
 ```text
 lib/
+├── db/
 ├── models/
+├── repositories/
 ├── router/
 ├── services/
 ├── view_models/
@@ -138,6 +145,7 @@ Examples:
 ```text
 UserModel
 PostModel
+QuoteModel
 ```
 
 #### Services
@@ -148,15 +156,15 @@ Examples:
 
 ```text
 UserService
-PostService
+QuoteApiService
 ```
 
 Current responsibilities:
 
-- Register user
-- Login user
-- Store users in memory
-- Create and list posts in memory
+- `UserService` registers and authenticates users using the local database.
+- `QuoteApiService` fetches and parses a random quote with Dio.
+- `PostRepository` stores and observes locally created posts using Drift.
+- `QuoteRepository` provides quotes to `QuoteViewModel`.
 
 #### ViewModels
 
@@ -170,9 +178,9 @@ RegisterViewModel
 PostViewModel
 ```
 
-`HomeView` validates the post form and delegates creation to `PostViewModel`.
-The view model uses `PostService` and notifies Provider listeners so the feed
-updates without rebuilding the app manually.
+`HomeView` validates the post form and delegates local post creation to
+`PostViewModel`; its inspiration section loads quotes through
+`QuoteViewModel`.
 
 #### Views
 
@@ -216,10 +224,9 @@ Each field provides its own validator and returns:
 
 At the moment:
 
-- User data is stored only in memory
-- Data is lost after application restart
-- No database integration yet
-- No API integration yet
+- User data is stored in the local database on the current device
+- Inspiration quotes come from the public DummyJSON API and are not user-created
+  content
 
 ---
 
@@ -230,22 +237,6 @@ At the moment:
 - Reactive UI updates
 - Loading states
 - Error states
-
-## Drift Database
-
-Planned:
-
-- Local user storage
-- CRUD operations
-- StreamBuilder integration
-
-## Dio + Repository Pattern
-
-Planned:
-
-- API communication
-- JSON deserialization
-- Remote data fetching
 
 ## Dependency Injection
 

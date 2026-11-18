@@ -63,6 +63,10 @@ class AppDatabase extends _$AppDatabase {
     return into(posts).insert(post);
   }
 
+  Future<void> upsertPost(PostsCompanion post) {
+    return into(posts).insertOnConflictUpdate(post);
+  }
+
   Stream<List<Post>> watchPosts() {
     return (select(posts)..orderBy([
           (post) => OrderingTerm.desc(post.createdAt),
