@@ -116,6 +116,8 @@ Current ViewModels:
 - QuoteViewModel
 
 Providers are registered globally in `main.dart` using `MultiProvider`.
+Application services and repositories are registered as lazy singletons in
+`lib/di/service_locator.dart` and resolved through GetIt.
 
 ---
 
@@ -126,6 +128,7 @@ Current project structure:
 ```text
 lib/
 ├── db/
+├── di/
 ├── models/
 ├── repositories/
 ├── router/
