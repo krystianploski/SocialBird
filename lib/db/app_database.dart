@@ -47,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase({QueryExecutor? executor}) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -56,15 +56,14 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(users);
       }
+      if (from < 3) {
+        await (delete(posts)..where((post) => post.id.like('remote-%'))).go();
+      }
     },
   );
 
   Future<void> insertPost(PostsCompanion post) {
     return into(posts).insert(post);
-  }
-
-  Future<void> upsertPost(PostsCompanion post) {
-    return into(posts).insertOnConflictUpdate(post);
   }
 
   Stream<List<Post>> watchPosts() {

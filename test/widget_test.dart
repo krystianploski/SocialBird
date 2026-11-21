@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
-import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
 import 'package:social_bird/db/app_database.dart';
-import 'package:social_bird/models/api_post_model.dart';
 import 'package:social_bird/models/quote_model.dart';
 import 'package:social_bird/models/user_model.dart';
 import 'package:social_bird/repositories/post_repository.dart';
 import 'package:social_bird/repositories/quote_repository.dart';
-import 'package:social_bird/services/post_api_service.dart';
 import 'package:social_bird/services/quote_api_service.dart';
 import 'package:social_bird/services/user_service.dart';
 
@@ -38,33 +35,27 @@ Widget _testApp(
       create: (_) => QuoteViewModel(
         quoteRepository: quoteRepository ?? _FakeQuoteRepository(),
       ),
-      child: Provider<PostApiService>(
-        create: (_) => _FakePostApiService(),
-        child: Provider<UserService>(
-          create: (_) => accounts,
-          child: Builder(
-            builder: (context) => MultiProvider(
-              providers: [
-                ChangeNotifierProvider(
-                  create: (_) =>
-                      LoginViewModel(userService: context.read<UserService>()),
+      child: Provider<UserService>(
+        create: (_) => accounts,
+        child: Builder(
+          builder: (context) => MultiProvider(
+            providers: [
+              ChangeNotifierProvider(
+                create: (_) =>
+                    LoginViewModel(userService: context.read<UserService>()),
+              ),
+              ChangeNotifierProvider(
+                create: (_) =>
+                    RegisterViewModel(userService: context.read<UserService>()),
+              ),
+              ChangeNotifierProvider(
+                create: (_) => PostViewModel(
+                  postRepository: PostRepository(context.read<AppDatabase>()),
+                  userService: context.read<UserService>(),
                 ),
-                ChangeNotifierProvider(
-                  create: (_) =>
-                      RegisterViewModel(userService: context.read<UserService>()),
-                ),
-                ChangeNotifierProvider(
-                  create: (_) => PostViewModel(
-                    postRepository: PostRepository(
-                      context.read<AppDatabase>(),
-                      context.read<PostApiService>(),
-                    ),
-                    userService: context.read<UserService>(),
-                  ),
-                ),
-              ],
-              child: MaterialApp(home: child),
-            ),
+              ),
+            ],
+            child: MaterialApp(home: child),
           ),
         ),
       ),
@@ -342,7 +333,7 @@ void main() {
 }
 
 class _FakeQuoteRepository extends QuoteRepository {
-  _FakeQuoteRepository() : super(QuoteApiService(dio: Dio()));
+  _FakeQuoteRepository() : super(QuoteApiService());
 
   var requestCount = 0;
 
@@ -357,15 +348,8 @@ class _FakeQuoteRepository extends QuoteRepository {
   }
 }
 
-class _FakePostApiService extends PostApiService {
-  _FakePostApiService() : super(dio: Dio());
-
-  @override
-  Future<List<ApiPostModel>> fetchPosts() async => const [];
-}
-
 class _RetryQuoteRepository extends QuoteRepository {
-  _RetryQuoteRepository() : super(QuoteApiService(dio: Dio()));
+  _RetryQuoteRepository() : super(QuoteApiService());
 
   var requestCount = 0;
 

@@ -23,7 +23,6 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        unawaited(context.read<PostViewModel>().syncRemotePosts());
         unawaited(context.read<QuoteViewModel>().fetchRandomQuote());
       }
     });
@@ -137,27 +136,6 @@ class _HomeViewState extends State<HomeView> {
                   Text(
                     'Najnowsze posty',
                     style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  Consumer<PostViewModel>(
-                    builder: (context, viewModel, child) {
-                      if (viewModel.isSyncing) {
-                        return const LinearProgressIndicator();
-                      }
-                      if (viewModel.hasSyncError) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('Nie udało się odświeżyć postów z API.'),
-                            TextButton(
-                              onPressed: () =>
-                                  unawaited(viewModel.syncRemotePosts()),
-                              child: const Text('Ponów'),
-                            ),
-                          ],
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
                   ),
                   const SizedBox(height: 8),
                   Expanded(

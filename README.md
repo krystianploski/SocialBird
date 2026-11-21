@@ -82,9 +82,7 @@ Validation includes:
 - Create text posts up to 280 characters from the home screen.
 - Posts are trimmed, validated, and displayed newest first.
 - The feed updates immediately through `PostViewModel` and Provider.
-- `PostRepository` combines locally created posts stored in Drift with posts
-  fetched through Dio from JSONPlaceholder. Remote posts are cached in Drift,
-  so they remain available if a later API request fails.
+- `PostRepository` stores locally created posts in Drift.
 - The home screen displays an inspirational quote fetched using Dio from
   `https://dummyjson.com/quotes/random`.
 - Quotes use `QuoteModel.fromJson`, MVVM, and a repository; network and invalid
@@ -161,15 +159,13 @@ Examples:
 
 ```text
 UserService
-PostApiService
 QuoteApiService
 ```
 
 Current responsibilities:
 
 - `UserService` registers and authenticates users using the local database.
-- `PostApiService` fetches remote posts with Dio.
-- `PostRepository` merges the remote API with the local Drift feed.
+- `PostRepository` stores and observes locally created posts using Drift.
 - `QuoteApiService` fetches and parses a random quote with Dio.
 - `QuoteRepository` provides quotes to `QuoteViewModel`.
 
@@ -186,8 +182,8 @@ PostViewModel
 ```
 
 `HomeView` validates the post form and delegates local post creation to
-`PostViewModel`; its feed is stored in Drift and synchronized with the remote
-posts API. Its inspiration section loads quotes through `QuoteViewModel`.
+`PostViewModel`; its feed is stored in Drift. Its inspiration section loads
+quotes through `QuoteViewModel`.
 
 #### Views
 
