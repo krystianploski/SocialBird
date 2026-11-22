@@ -78,6 +78,21 @@ class AppDatabase extends _$AppDatabase {
     return (delete(posts)..where((post) => post.id.equals(id))).go();
   }
 
+  Future<bool> updatePostLikes({
+    required String id,
+    required int likesCount,
+    required bool isLiked,
+  }) async {
+    final updated = await (update(posts)..where((post) => post.id.equals(id)))
+        .write(
+          PostsCompanion(
+            likesCount: Value(likesCount),
+            isLiked: Value(isLiked),
+          ),
+        );
+    return updated > 0;
+  }
+
   Future<User?> getUserByEmail(String normalizedEmail) {
     return (select(users)
           ..where((user) => user.normalizedEmail.equals(normalizedEmail)))

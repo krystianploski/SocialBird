@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/post_model.dart';
+import '../router/app_router.dart';
 import '../view_models/post_view_model.dart';
 import '../view_models/quote_view_model.dart';
 import '../view_models/theme_view_model.dart';
@@ -85,6 +86,11 @@ class _HomeViewState extends State<HomeView> {
       appBar: AppBar(
         title: const Text('SocialBird'),
         actions: [
+          IconButton(
+            tooltip: 'Profil użytkownika',
+            onPressed: () => appRouter.push('/profile'),
+            icon: const Icon(Icons.person),
+          ),
           Consumer<ThemeViewModel>(
             builder: (context, themeViewModel, child) => IconButton(
               tooltip: themeViewModel.isDarkMode
@@ -327,6 +333,27 @@ class _PostCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             SelectableText(post.content),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Consumer<PostViewModel>(
+                builder: (context, viewModel, child) => TextButton.icon(
+                  onPressed: () => viewModel.toggleLike(post),
+                  icon: Icon(
+                    post.isLiked ? Icons.favorite : Icons.favorite_border,
+                    color: post.isLiked
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  label: Text(post.likesCount.toString()),
+                  style: TextButton.styleFrom(
+                    foregroundColor: post.isLiked
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

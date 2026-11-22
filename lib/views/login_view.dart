@@ -15,6 +15,7 @@ class _LoginViewState extends State<LoginView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   static final _emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+  bool _obscurePassword = true;
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) {
@@ -95,8 +96,23 @@ class _LoginViewState extends State<LoginView> {
                 ),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      tooltip: _obscurePassword ? 'Pokaż hasło' : 'Ukryj hasło',
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
+                  ),
                   validator: (value) {
                     if ((value ?? '').length < 6) {
                       return 'Hasło musi mieć co najmniej 6 znaków';

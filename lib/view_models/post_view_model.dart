@@ -24,4 +24,8 @@ class PostViewModel extends ChangeNotifier {
       authorHandle: '@${user.username.toLowerCase()}',
     );
   }
+
+  Future<void> toggleLike(PostModel post) async {
+    await postRepository.togglePostLike(post);
+  }
 }

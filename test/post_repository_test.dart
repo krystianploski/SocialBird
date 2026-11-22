@@ -85,4 +85,22 @@ void main() {
     expect(await repository.deletePost(post.id), isFalse);
     await postsIterator.cancel();
   });
+
+  test('toggles local likes and persists the state', () async {
+    final post = await repository.insertPost(
+      content: 'A post to like',
+      authorName: 'Example User',
+      authorHandle: '@example',
+    );
+
+    expect(await repository.togglePostLike(post), isTrue);
+    var likedPosts = await repository.watchPosts().first;
+    expect(likedPosts.single.isLiked, isTrue);
+    expect(likedPosts.single.likesCount, 1);
+
+    expect(await repository.togglePostLike(likedPosts.single), isTrue);
+    likedPosts = await repository.watchPosts().first;
+    expect(likedPosts.single.isLiked, isFalse);
+    expect(likedPosts.single.likesCount, 0);
+  });
 }

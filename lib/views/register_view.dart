@@ -20,6 +20,8 @@ class _RegisterViewState extends State<RegisterView> {
   static final _usernameRegex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
   static final _emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmation = true;
 
   @override
   void dispose() {
@@ -121,8 +123,23 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      tooltip: _obscurePassword ? 'Pokaż hasło' : 'Ukryj hasło',
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
+                  ),
                   validator: (value) {
                     if ((value ?? '').length < 6) {
                       return 'Hasło musi mieć co najmniej 6 znaków';
@@ -132,10 +149,25 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscureConfirmation,
+                  decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     alignLabelWithHint: true,
+                    suffixIcon: IconButton(
+                      tooltip: _obscureConfirmation
+                          ? 'Pokaż hasło'
+                          : 'Ukryj hasło',
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmation = !_obscureConfirmation;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureConfirmation
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                    ),
                   ),
                   validator: (value) {
                     if ((value ?? '').isEmpty) {

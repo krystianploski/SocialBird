@@ -68,4 +68,14 @@ class PostRepository {
   Future<bool> deletePost(String id) async {
     return await _database.deletePost(id) > 0;
   }
+
+  Future<bool> togglePostLike(PostModel post) {
+    final isLiked = !post.isLiked;
+    final likesCount = isLiked ? post.likesCount + 1 : post.likesCount - 1;
+    return _database.updatePostLikes(
+      id: post.id,
+      likesCount: likesCount < 0 ? 0 : likesCount,
+      isLiked: isLiked,
+    );
+  }
 }
