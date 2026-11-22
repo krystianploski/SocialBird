@@ -14,6 +14,7 @@ import 'package:social_bird/view_models/login_view_model.dart';
 import 'package:social_bird/view_models/post_view_model.dart';
 import 'package:social_bird/view_models/quote_view_model.dart';
 import 'package:social_bird/view_models/register_view_model.dart';
+import 'package:social_bird/view_models/theme_view_model.dart';
 import 'package:social_bird/views/home_view.dart';
 import 'package:social_bird/views/login_view.dart';
 import 'package:social_bird/views/register_view.dart';
@@ -35,27 +36,50 @@ Widget _testApp(
       create: (_) => QuoteViewModel(
         quoteRepository: quoteRepository ?? _FakeQuoteRepository(),
       ),
-      child: Provider<UserService>(
-        create: (_) => accounts,
-        child: Builder(
-          builder: (context) => MultiProvider(
-            providers: [
-              ChangeNotifierProvider(
-                create: (_) =>
-                    LoginViewModel(userService: context.read<UserService>()),
-              ),
-              ChangeNotifierProvider(
-                create: (_) =>
-                    RegisterViewModel(userService: context.read<UserService>()),
-              ),
-              ChangeNotifierProvider(
-                create: (_) => PostViewModel(
-                  postRepository: PostRepository(context.read<AppDatabase>()),
-                  userService: context.read<UserService>(),
+      child: ChangeNotifierProvider(
+        create: (_) => ThemeViewModel(),
+        child: Provider<UserService>(
+          create: (_) => accounts,
+          child: Builder(
+            builder: (context) => MultiProvider(
+              providers: [
+                ChangeNotifierProvider(
+                  create: (_) =>
+                      LoginViewModel(userService: context.read<UserService>()),
+                ),
+                ChangeNotifierProvider(
+                  create: (_) => RegisterViewModel(
+                    userService: context.read<UserService>(),
+                  ),
+                ),
+                ChangeNotifierProvider(
+                  create: (_) => PostViewModel(
+                    postRepository: PostRepository(context.read<AppDatabase>()),
+                    userService: context.read<UserService>(),
+                  ),
+                ),
+              ],
+              child: Consumer<ThemeViewModel>(
+                builder: (context, themeViewModel, _) => MaterialApp(
+                  home: child,
+                  theme: ThemeData(
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.blue,
+                      brightness: Brightness.light,
+                    ),
+                  ),
+                  darkTheme: ThemeData(
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.blue,
+                      brightness: Brightness.dark,
+                    ),
+                  ),
+                  themeMode: themeViewModel.isDarkMode
+                      ? ThemeMode.dark
+                      : ThemeMode.light,
                 ),
               ),
-            ],
-            child: MaterialApp(home: child),
+            ),
           ),
         ),
       ),
@@ -326,6 +350,37 @@ void main() {
 
     expect(find.text('Zaloguj się, aby opublikować post'), findsOneWidget);
     expect(find.text('Nie ma jeszcze postów. Dodaj pierwszy!'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('home theme button toggles between light and dark modes', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(_testApp(const HomeView()));
+
+    expect(
+      Theme.of(tester.element(find.byType(Scaffold))).brightness,
+      Brightness.dark,
+    );
+    expect(find.byTooltip('Włącz jasny motyw'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Włącz jasny motyw'));
+    await tester.pumpAndSettle();
+
+    expect(
+      Theme.of(tester.element(find.byType(Scaffold))).brightness,
+      Brightness.light,
+    );
+    expect(find.byTooltip('Włącz ciemny motyw'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Włącz ciemny motyw'));
+    await tester.pumpAndSettle();
+    expect(
+      Theme.of(tester.element(find.byType(Scaffold))).brightness,
+      Brightness.dark,
+    );
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

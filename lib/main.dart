@@ -11,6 +11,7 @@ import 'view_models/login_view_model.dart';
 import 'view_models/post_view_model.dart';
 import 'view_models/quote_view_model.dart';
 import 'view_models/register_view_model.dart';
+import 'view_models/theme_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +19,6 @@ Future<void> main() async {
   runApp(const SocialBirdApp());
 }
 
-/// Root Widget
 class SocialBirdApp extends StatelessWidget {
   const SocialBirdApp({super.key});
 
@@ -27,6 +27,7 @@ class SocialBirdApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => WelcomeViewModel()),
+        ChangeNotifierProvider(create: (_) => ThemeViewModel()),
         ChangeNotifierProvider(
           create: (_) => RegisterViewModel(userService: getIt<UserService>()),
         ),
@@ -44,17 +45,31 @@ class SocialBirdApp extends StatelessWidget {
               QuoteViewModel(quoteRepository: getIt<QuoteRepository>()),
         ),
       ],
-      child: MaterialApp.router(
-        routerConfig: appRouter,
-        title: 'Social Bird',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
+      child: Consumer<ThemeViewModel>(
+        builder: (context, themeViewModel, child) {
+          return MaterialApp.router(
+            routerConfig: appRouter,
+            title: 'Social Bird',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.blue,
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+            ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.blue,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+            ),
+            themeMode: themeViewModel.isDarkMode
+                ? ThemeMode.dark
+                : ThemeMode.light,
+          );
+        },
       ),
     );
   }

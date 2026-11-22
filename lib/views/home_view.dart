@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/post_model.dart';
 import '../view_models/post_view_model.dart';
 import '../view_models/quote_view_model.dart';
+import '../view_models/theme_view_model.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -81,7 +82,22 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('SocialBird')),
+      appBar: AppBar(
+        title: const Text('SocialBird'),
+        actions: [
+          Consumer<ThemeViewModel>(
+            builder: (context, themeViewModel, child) => IconButton(
+              tooltip: themeViewModel.isDarkMode
+                  ? 'Włącz jasny motyw'
+                  : 'Włącz ciemny motyw',
+              onPressed: themeViewModel.toggleTheme,
+              icon: Icon(
+                themeViewModel.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

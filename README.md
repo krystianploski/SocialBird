@@ -7,6 +7,9 @@ The project is being developed following modern Flutter architecture patterns, i
 - Provider
 - ChangeNotifier
 - MVVM
+- Drift
+- Dio
+- GetIt
 - Form Validation
 
 ---
@@ -96,6 +99,12 @@ Validation includes:
   added later if users should be able to use names with spaces or change them
   independently of their unique handle.
 
+## Theme
+
+- The application supports light and dark themes.
+- `ThemeViewModel` stores the current theme state and calls `notifyListeners()`
+  after a change.
+
 ---
 
 ## State Management
@@ -116,6 +125,13 @@ Current ViewModels:
 Providers are registered globally in `main.dart` using `MultiProvider`.
 Application services and repositories are registered as lazy singletons in
 `lib/di/service_locator.dart` and resolved through GetIt.
+
+## Database
+
+- `AppDatabase` defines the `Posts` and `Users` Drift tables.
+- The feed is observed through `watchPosts()` and `StreamBuilder`.
+- The SQLite database is created automatically in the application documents
+  directory.
 
 ---
 
@@ -233,32 +249,6 @@ At the moment:
 
 ---
 
-# Planned Features
-
-## Provider Improvements
-
-- Reactive UI updates
-- Loading states
-- Error states
-
-## Dependency Injection
-
-Planned:
-
-- get_it registration
-- Service and repository injection
-
-## UI Improvements
-
-Planned:
-
-- Password visibility toggle
-- Loading indicators
-- User profile page
-- Post likes and comments
-
----
-
 # Build
 
 Install dependencies:
@@ -267,11 +257,20 @@ Install dependencies:
 flutter pub get
 ```
 
-Run application:
+Generate Drift database code:
 
 ```bash
-flutter run
+dart run build_runner build --delete-conflicting-outputs
 ```
+
+Run the application on Windows:
+
+```bash
+flutter run -d windows
+```
+
+The inspirational quote is fetched from
+`https://dummyjson.com/quotes/random`. No API key is required.
 
 ---
 
