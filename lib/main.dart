@@ -28,6 +28,7 @@ class SocialBirdApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => WelcomeViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeViewModel()),
+        Provider<UserService>.value(value: getIt<UserService>()),
         ChangeNotifierProvider(
           create: (_) => RegisterViewModel(userService: getIt<UserService>()),
         ),

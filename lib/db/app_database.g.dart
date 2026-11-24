@@ -558,6 +558,52 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _bioMeta = const VerificationMeta('bio');
+  @override
+  late final GeneratedColumn<String> bio = GeneratedColumn<String>(
+    'bio',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _locationMeta = const VerificationMeta(
+    'location',
+  );
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+    'location',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _birthDateMeta = const VerificationMeta(
+    'birthDate',
+  );
+  @override
+  late final GeneratedColumn<String> birthDate = GeneratedColumn<String>(
+    'birth_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -567,6 +613,10 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     normalizedEmail,
     passwordHash,
     passwordSalt,
+    displayName,
+    bio,
+    location,
+    birthDate,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -643,6 +693,33 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     } else if (isInserting) {
       context.missing(_passwordSaltMeta);
     }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('bio')) {
+      context.handle(
+        _bioMeta,
+        bio.isAcceptableOrUnknown(data['bio']!, _bioMeta),
+      );
+    }
+    if (data.containsKey('location')) {
+      context.handle(
+        _locationMeta,
+        location.isAcceptableOrUnknown(data['location']!, _locationMeta),
+      );
+    }
+    if (data.containsKey('birth_date')) {
+      context.handle(
+        _birthDateMeta,
+        birthDate.isAcceptableOrUnknown(data['birth_date']!, _birthDateMeta),
+      );
+    }
     return context;
   }
 
@@ -680,6 +757,22 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         DriftSqlType.string,
         data['${effectivePrefix}password_salt'],
       )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      bio: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bio'],
+      )!,
+      location: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}location'],
+      )!,
+      birthDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}birth_date'],
+      )!,
     );
   }
 
@@ -697,6 +790,10 @@ class User extends DataClass implements Insertable<User> {
   final String normalizedEmail;
   final String passwordHash;
   final String passwordSalt;
+  final String displayName;
+  final String bio;
+  final String location;
+  final String birthDate;
   const User({
     required this.id,
     required this.username,
@@ -705,6 +802,10 @@ class User extends DataClass implements Insertable<User> {
     required this.normalizedEmail,
     required this.passwordHash,
     required this.passwordSalt,
+    required this.displayName,
+    required this.bio,
+    required this.location,
+    required this.birthDate,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -716,6 +817,10 @@ class User extends DataClass implements Insertable<User> {
     map['normalized_email'] = Variable<String>(normalizedEmail);
     map['password_hash'] = Variable<String>(passwordHash);
     map['password_salt'] = Variable<String>(passwordSalt);
+    map['display_name'] = Variable<String>(displayName);
+    map['bio'] = Variable<String>(bio);
+    map['location'] = Variable<String>(location);
+    map['birth_date'] = Variable<String>(birthDate);
     return map;
   }
 
@@ -728,6 +833,10 @@ class User extends DataClass implements Insertable<User> {
       normalizedEmail: Value(normalizedEmail),
       passwordHash: Value(passwordHash),
       passwordSalt: Value(passwordSalt),
+      displayName: Value(displayName),
+      bio: Value(bio),
+      location: Value(location),
+      birthDate: Value(birthDate),
     );
   }
 
@@ -746,6 +855,10 @@ class User extends DataClass implements Insertable<User> {
       normalizedEmail: serializer.fromJson<String>(json['normalizedEmail']),
       passwordHash: serializer.fromJson<String>(json['passwordHash']),
       passwordSalt: serializer.fromJson<String>(json['passwordSalt']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      bio: serializer.fromJson<String>(json['bio']),
+      location: serializer.fromJson<String>(json['location']),
+      birthDate: serializer.fromJson<String>(json['birthDate']),
     );
   }
   @override
@@ -759,6 +872,10 @@ class User extends DataClass implements Insertable<User> {
       'normalizedEmail': serializer.toJson<String>(normalizedEmail),
       'passwordHash': serializer.toJson<String>(passwordHash),
       'passwordSalt': serializer.toJson<String>(passwordSalt),
+      'displayName': serializer.toJson<String>(displayName),
+      'bio': serializer.toJson<String>(bio),
+      'location': serializer.toJson<String>(location),
+      'birthDate': serializer.toJson<String>(birthDate),
     };
   }
 
@@ -770,6 +887,10 @@ class User extends DataClass implements Insertable<User> {
     String? normalizedEmail,
     String? passwordHash,
     String? passwordSalt,
+    String? displayName,
+    String? bio,
+    String? location,
+    String? birthDate,
   }) => User(
     id: id ?? this.id,
     username: username ?? this.username,
@@ -778,6 +899,10 @@ class User extends DataClass implements Insertable<User> {
     normalizedEmail: normalizedEmail ?? this.normalizedEmail,
     passwordHash: passwordHash ?? this.passwordHash,
     passwordSalt: passwordSalt ?? this.passwordSalt,
+    displayName: displayName ?? this.displayName,
+    bio: bio ?? this.bio,
+    location: location ?? this.location,
+    birthDate: birthDate ?? this.birthDate,
   );
   User copyWithCompanion(UsersCompanion data) {
     return User(
@@ -796,6 +921,12 @@ class User extends DataClass implements Insertable<User> {
       passwordSalt: data.passwordSalt.present
           ? data.passwordSalt.value
           : this.passwordSalt,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      bio: data.bio.present ? data.bio.value : this.bio,
+      location: data.location.present ? data.location.value : this.location,
+      birthDate: data.birthDate.present ? data.birthDate.value : this.birthDate,
     );
   }
 
@@ -808,7 +939,11 @@ class User extends DataClass implements Insertable<User> {
           ..write('email: $email, ')
           ..write('normalizedEmail: $normalizedEmail, ')
           ..write('passwordHash: $passwordHash, ')
-          ..write('passwordSalt: $passwordSalt')
+          ..write('passwordSalt: $passwordSalt, ')
+          ..write('displayName: $displayName, ')
+          ..write('bio: $bio, ')
+          ..write('location: $location, ')
+          ..write('birthDate: $birthDate')
           ..write(')'))
         .toString();
   }
@@ -822,6 +957,10 @@ class User extends DataClass implements Insertable<User> {
     normalizedEmail,
     passwordHash,
     passwordSalt,
+    displayName,
+    bio,
+    location,
+    birthDate,
   );
   @override
   bool operator ==(Object other) =>
@@ -833,7 +972,11 @@ class User extends DataClass implements Insertable<User> {
           other.email == this.email &&
           other.normalizedEmail == this.normalizedEmail &&
           other.passwordHash == this.passwordHash &&
-          other.passwordSalt == this.passwordSalt);
+          other.passwordSalt == this.passwordSalt &&
+          other.displayName == this.displayName &&
+          other.bio == this.bio &&
+          other.location == this.location &&
+          other.birthDate == this.birthDate);
 }
 
 class UsersCompanion extends UpdateCompanion<User> {
@@ -844,6 +987,10 @@ class UsersCompanion extends UpdateCompanion<User> {
   final Value<String> normalizedEmail;
   final Value<String> passwordHash;
   final Value<String> passwordSalt;
+  final Value<String> displayName;
+  final Value<String> bio;
+  final Value<String> location;
+  final Value<String> birthDate;
   const UsersCompanion({
     this.id = const Value.absent(),
     this.username = const Value.absent(),
@@ -852,6 +999,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     this.normalizedEmail = const Value.absent(),
     this.passwordHash = const Value.absent(),
     this.passwordSalt = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.bio = const Value.absent(),
+    this.location = const Value.absent(),
+    this.birthDate = const Value.absent(),
   });
   UsersCompanion.insert({
     this.id = const Value.absent(),
@@ -861,6 +1012,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     required String normalizedEmail,
     required String passwordHash,
     required String passwordSalt,
+    this.displayName = const Value.absent(),
+    this.bio = const Value.absent(),
+    this.location = const Value.absent(),
+    this.birthDate = const Value.absent(),
   }) : username = Value(username),
        normalizedUsername = Value(normalizedUsername),
        email = Value(email),
@@ -875,6 +1030,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     Expression<String>? normalizedEmail,
     Expression<String>? passwordHash,
     Expression<String>? passwordSalt,
+    Expression<String>? displayName,
+    Expression<String>? bio,
+    Expression<String>? location,
+    Expression<String>? birthDate,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -884,6 +1043,10 @@ class UsersCompanion extends UpdateCompanion<User> {
       if (normalizedEmail != null) 'normalized_email': normalizedEmail,
       if (passwordHash != null) 'password_hash': passwordHash,
       if (passwordSalt != null) 'password_salt': passwordSalt,
+      if (displayName != null) 'display_name': displayName,
+      if (bio != null) 'bio': bio,
+      if (location != null) 'location': location,
+      if (birthDate != null) 'birth_date': birthDate,
     });
   }
 
@@ -895,6 +1058,10 @@ class UsersCompanion extends UpdateCompanion<User> {
     Value<String>? normalizedEmail,
     Value<String>? passwordHash,
     Value<String>? passwordSalt,
+    Value<String>? displayName,
+    Value<String>? bio,
+    Value<String>? location,
+    Value<String>? birthDate,
   }) {
     return UsersCompanion(
       id: id ?? this.id,
@@ -904,6 +1071,10 @@ class UsersCompanion extends UpdateCompanion<User> {
       normalizedEmail: normalizedEmail ?? this.normalizedEmail,
       passwordHash: passwordHash ?? this.passwordHash,
       passwordSalt: passwordSalt ?? this.passwordSalt,
+      displayName: displayName ?? this.displayName,
+      bio: bio ?? this.bio,
+      location: location ?? this.location,
+      birthDate: birthDate ?? this.birthDate,
     );
   }
 
@@ -931,6 +1102,18 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (passwordSalt.present) {
       map['password_salt'] = Variable<String>(passwordSalt.value);
     }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (bio.present) {
+      map['bio'] = Variable<String>(bio.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (birthDate.present) {
+      map['birth_date'] = Variable<String>(birthDate.value);
+    }
     return map;
   }
 
@@ -943,7 +1126,11 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('email: $email, ')
           ..write('normalizedEmail: $normalizedEmail, ')
           ..write('passwordHash: $passwordHash, ')
-          ..write('passwordSalt: $passwordSalt')
+          ..write('passwordSalt: $passwordSalt, ')
+          ..write('displayName: $displayName, ')
+          ..write('bio: $bio, ')
+          ..write('location: $location, ')
+          ..write('birthDate: $birthDate')
           ..write(')'))
         .toString();
   }
@@ -1213,6 +1400,10 @@ typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
   required String normalizedEmail,
   required String passwordHash,
   required String passwordSalt,
+  Value<String> displayName,
+  Value<String> bio,
+  Value<String> location,
+  Value<String> birthDate,
 });
 typedef $$UsersTableUpdateCompanionBuilder = UsersCompanion Function({
   Value<int> id,
@@ -1222,6 +1413,10 @@ typedef $$UsersTableUpdateCompanionBuilder = UsersCompanion Function({
   Value<String> normalizedEmail,
   Value<String> passwordHash,
   Value<String> passwordSalt,
+  Value<String> displayName,
+  Value<String> bio,
+  Value<String> location,
+  Value<String> birthDate,
 });
 
 class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
@@ -1264,6 +1459,26 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<String> get passwordSalt => $composableBuilder(
     column: $table.passwordSalt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bio => $composableBuilder(
+    column: $table.bio,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get birthDate => $composableBuilder(
+    column: $table.birthDate,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1311,6 +1526,26 @@ class $$UsersTableOrderingComposer
     column: $table.passwordSalt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bio => $composableBuilder(
+    column: $table.bio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get location => $composableBuilder(
+    column: $table.location,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get birthDate => $composableBuilder(
+    column: $table.birthDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UsersTableAnnotationComposer
@@ -1350,6 +1585,20 @@ class $$UsersTableAnnotationComposer
     column: $table.passwordSalt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get bio =>
+      $composableBuilder(column: $table.bio, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get birthDate =>
+      $composableBuilder(column: $table.birthDate, builder: (column) => column);
 }
 
 class $$UsersTableTableManager
@@ -1387,6 +1636,10 @@ class $$UsersTableTableManager
                 Value<String> normalizedEmail = const Value.absent(),
                 Value<String> passwordHash = const Value.absent(),
                 Value<String> passwordSalt = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String> bio = const Value.absent(),
+                Value<String> location = const Value.absent(),
+                Value<String> birthDate = const Value.absent(),
               }) => UsersCompanion(
                 id: id,
                 username: username,
@@ -1395,6 +1648,10 @@ class $$UsersTableTableManager
                 normalizedEmail: normalizedEmail,
                 passwordHash: passwordHash,
                 passwordSalt: passwordSalt,
+                displayName: displayName,
+                bio: bio,
+                location: location,
+                birthDate: birthDate,
               ),
           createCompanionCallback:
               ({
@@ -1405,6 +1662,10 @@ class $$UsersTableTableManager
                 required String normalizedEmail,
                 required String passwordHash,
                 required String passwordSalt,
+                Value<String> displayName = const Value.absent(),
+                Value<String> bio = const Value.absent(),
+                Value<String> location = const Value.absent(),
+                Value<String> birthDate = const Value.absent(),
               }) => UsersCompanion.insert(
                 id: id,
                 username: username,
@@ -1413,6 +1674,10 @@ class $$UsersTableTableManager
                 normalizedEmail: normalizedEmail,
                 passwordHash: passwordHash,
                 passwordSalt: passwordSalt,
+                displayName: displayName,
+                bio: bio,
+                location: location,
+                birthDate: birthDate,
               ),
           withReferenceMapper: (p0) => p0
               .map(

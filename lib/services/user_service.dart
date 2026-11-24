@@ -40,15 +40,55 @@ class UserService {
 
     return _setCurrentUser(
       UserModel(
+        id: storedUser.id,
         username: storedUser.username,
         email: storedUser.email,
         password: '',
+        displayName: storedUser.displayName,
+        bio: storedUser.bio,
+        location: storedUser.location,
+        birthDate: storedUser.birthDate,
       ),
     );
   }
 
   void logout() {
     _currentUser = null;
+  }
+
+  Future<bool> updateProfile({
+    required String displayName,
+    required String bio,
+    required String location,
+    required String birthDate,
+  }) async {
+    final user = _currentUser;
+    if (user?.id == null) {
+      return false;
+    }
+
+    final updated = await _database.updateUserProfile(
+      id: user!.id!,
+      displayName: displayName.trim(),
+      bio: bio.trim(),
+      location: location.trim(),
+      birthDate: birthDate.trim(),
+    );
+    if (updated) {
+      _setCurrentUser(
+        UserModel(
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          password: '',
+          displayName: displayName.trim(),
+          bio: bio.trim(),
+          location: location.trim(),
+          birthDate: birthDate.trim(),
+        ),
+      );
+    }
+    return updated;
   }
 
   Future<bool> register(UserModel user) async {
@@ -68,7 +108,7 @@ class UserService {
       growable: false,
     );
     final passwordHash = await _hashPassword(user.password, salt);
-    await _database.insertUser(
+    final id = await _database.insertUser(
       UsersCompanion.insert(
         username: user.username.trim(),
         normalizedUsername: normalizedUsername,
@@ -81,6 +121,7 @@ class UserService {
 
     _setCurrentUser(
       UserModel(
+        id: id,
         username: user.username.trim(),
         email: user.email.trim(),
         password: '',

@@ -5,6 +5,7 @@ import '../views/login_view.dart';
 import '../views/register_view.dart';
 import '../views/home_view.dart';
 import '../views/profile_view.dart';
+import '../views/edit_profile_view.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: [
@@ -16,5 +17,9 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/login', builder: (context, state) => const LoginView()),
     GoRoute(path: '/home', builder: (context, state) => const HomeView()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfileView()),
+    GoRoute(
+      path: '/profile/edit',
+      builder: (context, state) => const EditProfileView(),
+    ),
   ],
 );

@@ -40,6 +40,14 @@ class Users extends Table {
   TextColumn get passwordHash => text()();
 
   TextColumn get passwordSalt => text()();
+
+  TextColumn get displayName => text().withDefault(const Constant(''))();
+
+  TextColumn get bio => text().withDefault(const Constant(''))();
+
+  TextColumn get location => text().withDefault(const Constant(''))();
+
+  TextColumn get birthDate => text().withDefault(const Constant(''))();
 }
 
 @DriftDatabase(tables: [Posts, Users])
@@ -47,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase({QueryExecutor? executor}) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,6 +66,12 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await (delete(posts)..where((post) => post.id.like('remote-%'))).go();
+      }
+      if (from < 4) {
+        await m.addColumn(users, users.displayName);
+        await m.addColumn(users, users.bio);
+        await m.addColumn(users, users.location);
+        await m.addColumn(users, users.birthDate);
       }
     },
   );
@@ -115,6 +129,25 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> insertUser(UsersCompanion user) {
     return into(users).insert(user);
+  }
+
+  Future<bool> updateUserProfile({
+    required int id,
+    required String displayName,
+    required String bio,
+    required String location,
+    required String birthDate,
+  }) async {
+    final updated = await (update(users)..where((user) => user.id.equals(id)))
+        .write(
+          UsersCompanion(
+            displayName: Value(displayName),
+            bio: Value(bio),
+            location: Value(location),
+            birthDate: Value(birthDate),
+          ),
+        );
+    return updated > 0;
   }
 }
 
